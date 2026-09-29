@@ -1,0 +1,10 @@
+- hosts: localhost
+  gather_facts: true
+
+- name: playbook
+  hosts: "{{ HOSTS }}"
+  become: true
+  vars:
+    ACTION:
+  roles:
+    - { role: "{{ ROLE }}"}
