@@ -1,0 +1,12 @@
+- name: stop wireguard-server
+  community.docker.docker_container:
+    name: wireguard-server
+    state: absent
+  delegate_to: localhost
+  connection: local
+  run_once: true
+
+- name: stop wireguard-client
+  community.docker.docker_container:
+    name: wireguard-client
+    state: absent

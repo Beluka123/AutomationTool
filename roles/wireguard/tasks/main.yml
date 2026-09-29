@@ -4,3 +4,7 @@
 - name: start wireguard
   include_tasks: start-wireguard.yml
   when: ACTION == "start"
+
+- name: stop wireguard
+  include_tasks: stop-wireguard.yml
+  when: ACTION == "stop"
