@@ -1,0 +1,27 @@
+- name: start zabbix-server
+  community.docker.docker_compose_v2:
+    project_src: "{{ role_path }}/files"
+    state: present
+  delegate_to: localhost
+  connection: local
+  run_once: true
+
+- name: create zabbix directory
+  ansible.builtin.file:
+    path: /opt/zabbix
+    state: directory
+
+- name: copy .env file
+  ansible.builtin.copy:
+    src: .env-remote
+    dest: /opt/zabbix/.env
+
+- name: start zabbix-agent
+  community.docker.docker_container:
+    name: zabbix-agent
+    image: zabbix/zabbix-agent:alpine-7.4-latest
+    state: started
+    ports:
+      - "10050:10050"
+    env_file: /opt/zabbix/.env
+    restart_policy: unless-stopped

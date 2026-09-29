@@ -1,0 +1,80 @@
+services:
+  zabbix-server:
+    image: zabbix/zabbix-server-mysql:alpine-7.4-latest
+    container_name: zabbix-server
+    ports:
+      - "10051:10051"
+    environment:
+      - DB_SERVER_HOST=mysql
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - zabbix-network
+    restart: unless-stopped
+
+  zabbix-web:
+    image: zabbix/zabbix-web-nginx-mysql:alpine-7.4-latest
+    container_name: zabbix-web
+    ports:
+      - "8080:8080"
+    environment:
+      - ZBX_SERVER_HOST=zabbix-server
+      - DB_SERVER_HOST=mysqL
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    depends_on:
+      mysql:
+        condition: service_healthy
+      zabbix-server:
+        condition: service_started
+    networks:
+      - zabbix-network
+    restart: unless-stopped
+
+  zabbix-agent:
+    image: zabbix/zabbix-agent:alpine-7.4-latest
+    container_name: zabbix-agent
+    ports: 
+      - "10050:10050"
+    environment:
+      - ZBX_HOSTNAME=${ZBX_HOSTNAME}
+      - ZBX_SERVER_HOST=zabbix-server
+      - ZBX_SERVER_ACTIVE_HOST=zabbix-server
+    depends_on:
+      zabbix-server:
+        condition: service_started
+    networks:
+      - zabbix-network
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_DATABASE=${MYSQL_DATABASE}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - zabbix-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping","-h", "127.0.0.1", "-u", "${MYSQL_USER}", "-p", "${MYSQL_ROOT_PASSWORD}"]
+      timeout: 5s
+      interval: 5s
+      retries: 5
+      start_period: 30s
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+
+networks:
+  zabbix-network:
+    driver: bridge
