@@ -43,7 +43,7 @@
     dest: /opt/wireguard/wg0.conf
 
 - name: start wireguard-client
-  community.docker.docker_containter:
+  community.docker.docker_container:
     name: wireguard-client
     image: linuxserver/wireguard:latest
     state: started
