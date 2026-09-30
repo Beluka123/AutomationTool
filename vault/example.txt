@@ -1,0 +1,1 @@
+Use vault folder to hold passwords for ansible-vault

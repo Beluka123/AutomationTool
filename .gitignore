@@ -1,5 +1,0 @@
-vault/*
-inventory/*.ini
-inventory/*.yml
-inventory/group_vars/*
-inventory/host_vars/*
