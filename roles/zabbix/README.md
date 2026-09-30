@@ -1,38 +1,59 @@
-Role Name
-=========
+# zabbix role
 
-A brief description of the role goes here.
+Sets up Zabbix monitoring using Docker.
 
-Requirements
-------------
+- The **server** (Zabbix server, web UI, MySQL) runs on the machine where you run Ansible.
+- An **agent** runs on each target host and sends data to the server.
 
-Any pre-requisites that may not be covered by Ansible itself or the role should be mentioned here. For instance, if the role uses the EC2 module, it may be a good idea to mention in this section that the boto package is required.
+## Requirements
 
-Role Variables
---------------
+- Docker with Compose v2 on your machine
+- Docker on the target hosts
+- Free ports on your machine: `10051`, `8080`, `10050`
 
-A description of the settable variables for this role should go here, including any variables that are in defaults/main.yml, vars/main.yml, and any variables that can/should be set via parameters to the role. Any variables that are read from other roles and/or the global scope (ie. hostvars, group vars, etc.) should be mentioned here as well.
+## Setup
 
-Dependencies
-------------
+Fill in two files in `roles/zabbix/files/` before starting.
 
-A list of other roles hosted on Galaxy should go here, plus any details in regards to parameters that may need to be set for other roles, or variables that are used from other roles.
+`.env` (server):
 
-Example Playbook
-----------------
+```env
+MYSQL_ROOT_PASSWORD=
+MYSQL_DATABASE=
+MYSQL_USER=
+MYSQL_PASSWORD=
+ZBX_HOSTNAME=
+```
 
-Including an example of how to use your role (for instance, with variables passed in as parameters) is always nice for users too:
+`.env-remote` (agents):
 
-    - hosts: servers
-      roles:
-         - { role: username.rolename, x: 42 }
+```env
+ZBX_HOSTNAME=
+ZBX_SERVER_HOST=
+ZBX_SERVER_ACTIVE_HOST=
+```
 
-License
--------
+Set `ZBX_SERVER_HOST` and `ZBX_SERVER_ACTIVE_HOST` to the IP of your machine. Note that `.env-remote` is copied to every host as is.
 
-BSD
+## Usage
 
-Author Information
-------------------
+```bash
+./setup example_group zabbix start   # start server and agents
+./setup example_group zabbix stop    # stop and remove them
+```
 
-An optional section for the role authors to include contact information, or a website (HTML is not allowed).
+After start, open `http://<your machine IP>:8080`. The default login is `Admin` / `zabbix`. Change the password right away.
+
+## What `start` does
+
+On your machine: starts the stack from `files/compose.yml` (server, web, agent, MySQL).
+
+On each target host:
+
+1. Creates `/opt/zabbix`.
+2. Copies `.env-remote` to `/opt/zabbix/.env`.
+3. Starts the `zabbix-agent` container.
+
+## What `stop` does
+
+Stops the stack on your machine and removes the agent container on the hosts.
